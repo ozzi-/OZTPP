@@ -1,13 +1,23 @@
 package Helper;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Injector {
 	private ArrayList<Variable> variables = new ArrayList<Variable>();
 	private String markerCharacter;
-	
+	private boolean forceRequired;
+
+	public Injector(boolean forceRequired) {
+		this.setForceRequired(forceRequired);
+	}
 
 	public void setMarkerCharacter(String markerCharacter){
 		this.markerCharacter=markerCharacter;
+	}
+	
+	public String getMarkerCharacter(){
+		return this.markerCharacter;
 	}
 	
 	public Result inject(String string){
@@ -17,13 +27,29 @@ public class Injector {
 			String variableMarked = markerCharacter+variable.getName()+markerCharacter;
 			if(variable.isRequired()){
 				if(!string.contains(variableMarked)){
-					result.addEvent(new Event("Required Variable "+variable.getName()+" not found in the provided string"));
+					if(forceRequired){
+						System.err.println("Required Variable "+variable.getName()+" not found in the provided string. Aborting");
+						System.exit(-1);
+					}else{
+						result.addEvent(new Event("Required Variable "+variable.getName()+" not found in the provided string"));						
+					}
 				}
 			}
 			string = string.replace(variableMarked, variable.getValue());
 		}
-		result.addEvent(new Event("Completed. Original size "+originalString.length()+", current size "+originalString.length()));
 		result.setText(string);
+		
+		Pattern p = Pattern.compile(markerCharacter+"[0-9a-zA-Z_-]+"+markerCharacter);
+		Matcher m = p.matcher(string);
+		if(m.find()){
+			if(forceRequired){
+				System.err.println("Found undeclared variable "+m.group()+" in the provided file");				
+				System.exit(-1);	
+			}else{
+				result.addEvent(new Event("Found undeclared variable "+m.group()+" in the input file"));						
+			}
+		}
+		result.addEvent(new Event("Completed. Original size "+originalString.length()+", current size "+string.length()));
 		return result;
 	}
 	
@@ -40,5 +66,13 @@ public class Injector {
 	}
 	public void setVariables(ArrayList<Variable> variables) {
 		this.variables = variables;
+	}
+
+	public boolean isForceRequired() {
+		return forceRequired;
+	}
+
+	public void setForceRequired(boolean forceRequired) {
+		this.forceRequired = forceRequired;
 	}
 }

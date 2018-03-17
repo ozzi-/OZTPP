@@ -1,5 +1,7 @@
 package Helper;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,7 +13,7 @@ public class File {
 		try {
 			encoded = Files.readAllBytes(Paths.get(path));
 		} catch (IOException|NullPointerException e1) {
-			System.out.println("Error reading "+path);
+			System.out.println("Error reading "+path+" "+e1.getCause());
 			System.exit(1);
 		}
 		String res ="";
@@ -28,5 +30,13 @@ public class File {
 		}
 		
 		return res;
+	}
+	
+	public static void toFile(String path, String text){
+		try (PrintWriter out = new PrintWriter(path)) {
+		    out.println(text);
+		} catch (FileNotFoundException e) {
+			System.out.println("Error writing to "+path+" "+e.getCause());
+		}
 	}
 }

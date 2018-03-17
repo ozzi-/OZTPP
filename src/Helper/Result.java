@@ -4,9 +4,6 @@ import java.util.ArrayList;
 public class Result {
 	private String text;
 	private ArrayList<Event> events = new ArrayList<Event>();
-
-	public Result() {
-	}
 	
 	public void addEvent(Event event){
 		events.add(event);
@@ -23,6 +20,15 @@ public class Result {
 	public void setText(String text) {
 		this.text = text;
 	}
+	
+	public String eventsToString(){
+		String eventString="";
+		for (Event event : events) {
+			eventString+=event.getEvent()+"\r\n";
+		}
+		return eventString;
+	}
+	
 	public String toString(){
 		String eventString="";
 		for (Event event : events) {
