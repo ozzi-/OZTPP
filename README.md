@@ -1,9 +1,12 @@
 # OZTPP
 ```
 usage: OZTPP.jar
- -e,--encoding <arg>    set encoding used to read files
- -i,--input <arg>       input file path
- -v,--variables <arg>   variables json file path
+ -i,--input <arg>       Required: input file path
+ -v,--variables <arg>   Required: variables json file path
+ -e,--encoding <arg>    Set encoding used to read files (default: UTF-8)
+ -forcerequired         Fail when required variable is not found (default: warning only)
+ -l,--log <arg>         Write log to file path (default: printed to console when -o is set)
+ -o,--output <arg>      Write processed input file to file path
 ```
 
 Turns this:
