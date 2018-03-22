@@ -13,8 +13,8 @@ public class File {
 		try {
 			encoded = Files.readAllBytes(Paths.get(path));
 		} catch (IOException|NullPointerException e1) {
-			System.out.println("Error reading "+path+" "+e1.getCause());
-			System.exit(1);
+			System.out.println("Error reading '"+path+"' - "+e1.getClass().getCanonicalName());
+			System.exit(-1);
 		}
 		String res ="";
 		try{
@@ -28,7 +28,6 @@ public class File {
 			}
 			System.out.println("Invalid encoding provided, falling back to UTF-8");
 		}
-		
 		return res;
 	}
 	

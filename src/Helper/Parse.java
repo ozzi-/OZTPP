@@ -15,8 +15,8 @@ import org.apache.commons.cli.ParseException;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.JsonObject.Member;
+import com.eclipsesource.json.JsonValue;
 
 public class Parse {
 	public static CommandLine commandLineArgs(String[] args) {
@@ -60,34 +60,52 @@ public class Parse {
 	}
 	
 	public static void variablesFile(String varsString, Injector injector) {
-		JsonArray jsonArray = null;
+		JsonArray jsonArray = null;		
 		try{
-			jsonArray = Json.parse(varsString).asArray();			
+			JsonValue jv = Json.parse(varsString);
+			JsonObject jo = jv.asObject();
+			if(jo.get("marker")!=null){
+				injector.setMarkerCharacter(jo.get("marker").asString());
+			}
+			if(jo.get("recursionlevel")!=null) {
+				injector.setRecursionLevel(jo.get("recursionlevel").asInt());
+			}
+			jsonArray = jo.get("variables").asArray();			
 		}catch (Exception e){
 			System.err.println("Error parsing variables json");
+			System.err.println(e.getMessage());
 			System.exit(-1);
 		}
+		int i = 0;
 		for (JsonValue jsonValue : jsonArray) {
+			i++;
 			JsonObject currentJsonObject = jsonValue.asObject();
-			if(currentJsonObject.get("marker")!=null){
-				injector.setMarkerCharacter(currentJsonObject.get("marker").asString());
-			}else{
-				boolean required = false;
-				String name=null;
-				String value=null;
-				for (Member member : currentJsonObject) {
-					  String jsonObjName = member.getName();
-					  JsonValue jsonObjValue = member.getValue();
-					  if(jsonObjName.equals("required")){
-							required = currentJsonObject.get("required")!=null?currentJsonObject.get("required").asBoolean():false;
-					  }else{
-						  name = jsonObjName;
-						  value = jsonObjValue.asString();
-					  }
-				}
-				injector.addVariable(name,value, required);						  
+			boolean required = false;
+			String name=null;
+			String value=null;
+			for (Member member : currentJsonObject) {
+				  String jsonObjName = member.getName();
+				  JsonValue jsonObjValue = member.getValue();
+				  if(jsonObjName.equals("required")){
+						required = currentJsonObject.get("required")!=null?currentJsonObject.get("required").asBoolean():false;
+				  }else if(jsonObjName.equals("name")) {
+					  name = jsonObjValue.asString();
+				  }else if(jsonObjName.equals("value")) {
+					  value = jsonObjValue.asString();
+				  }else if(jsonObjName.equals("file")) {
+					  value = File.readFile(jsonObjValue.asString(), "UTF-8");
+				  }
 			}
+			if(name==null || value==null) {
+				System.err.println("Missing name or value for variable #"+i);
+				System.exit(-1);
+			}
+			injector.addVariable(name,value, required);						  
 		}
+		checkForInvalidVariableNames(injector);
+	}
+
+	private static void checkForInvalidVariableNames(Injector injector) {
 		for (Variable variable : injector.getVariables()) {
 			Pattern p = Pattern.compile("^[0-9a-zA-Z_-]+$");
 			Matcher m = p.matcher(variable.getName());
@@ -96,6 +114,5 @@ public class Parse {
 				System.exit(-1);
 			}
 		}
-
 	}
 }
