@@ -1,4 +1,9 @@
 # OZTPP
+OZ-Text-Pre-Processor is a small command line tool used for preprocessing of text files.
+
+It was developed for the primary use of generating configuration files for multiple systems, which only differ for some certain strings (example: a changing IP per config file).
+With OZTTP only the master template (--input) has to be adjusted instead of making the changes by hand in every single file. 
+
 ```
 usage: OZTPP.jar
  -i,--input <arg>       Required: input file path
@@ -9,33 +14,56 @@ usage: OZTPP.jar
  -o,--output <arg>      Write processed input file to file path
 ```
 
-Turns this:
+## Example
+```
+java -jar OZTTP.jar -i input.txt -v variables.json -o out.txt
+```
+
+Turns this (input.txt):
 ```
 if(getVariable().equals("%example%")){
-	System.out.println("%wow%");
+	System.out.println("%example%");
+}
+while(test){
+	%fileinclude%
 }
 ```
 
-With the help of this:
+With the help of this (variables.json):
 ```
-[
-	{
-		"marker": "%"
-	},
-	{
-		"example": "such text",
-		"required": true
-	},
-	{
-		"wow": "even \r\n more texts"
-	}
-]
+{
+  "marker": "%", // optional, defaults to %variablename%
+  "recursionlevel": 5, // optional, defaults to 10 
+  "variables": [
+    {
+      "name": "example",
+      "value": "192.168.1.4"
+    },
+    {
+      "name": "fileinclude",
+      "file": "/home/ozzi/Desktop/Ruleset/include.txt"
+    }
+  ]
+}
+
+```
+And this (include.txt):
+```
+System.out.println("im from the include file");
+// indentation is kept. neat!
+// also variables work here too -> %example%
 ```
 
-Into this:
+Into this (output.txt):
 ```
-if(getVariable().equals("such text")){
-	System.out.println("even 
- more texts");
+if(getVariable().equals("192.168.1.4")){
+	System.out.println("192.168.1.4");
+}
+while(test){
+	System.out.println("im from the include file");
+	// indentation is kept. neat!
+	// also variables work here too -> 192.168.1.4
 }
 ```
+
+While the output on the CLI will contain information about any errors, missing required variables, variables that have been found in input.txt but not defined and the size prior and after the processing. 
